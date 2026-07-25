@@ -1,0 +1,17 @@
+{
+  "required": false,
+  "minVersion": "0.8",
+  "compatibilityLevel": "JAVA_21",
+  "package": "top.npcpathfindinglegacy.mixin",
+  "mixins": [
+    "MixinDataAI",
+    "MixinEntityNPCInterface"
+  ],
+  "client": [
+    "client.MixinGuiNpcAI"
+  ],
+  "server": [],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

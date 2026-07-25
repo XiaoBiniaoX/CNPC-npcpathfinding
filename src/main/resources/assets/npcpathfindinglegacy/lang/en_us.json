@@ -1,0 +1,12 @@
+{
+  "npcpathfindinglegacy.gui.open": "Pathfinding",
+  "npcpathfindinglegacy.gui.title": "Enhanced Pathfinding",
+  "npcpathfindinglegacy.gui.mode": "Navigation mode",
+  "npcpathfindinglegacy.gui.mode.vanilla": "Vanilla",
+  "npcpathfindinglegacy.gui.mode.enhanced": "Enhanced",
+  "npcpathfindinglegacy.gui.walkTendency": "Walking tendency",
+  "npcpathfindinglegacy.gui.jumpTendency": "Jump tendency",
+  "npcpathfindinglegacy.gui.parkourMaxDist": "Maximum parkour gap",
+  "npcpathfindinglegacy.gui.chaseJumpInterval": "Chase jump interval",
+  "npcpathfindinglegacy.gui.done": "Done"
+}
