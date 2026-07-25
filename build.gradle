@@ -1,0 +1,107 @@
+buildscript {
+    repositories {
+        maven { url = uri("${rootProject.projectDir}/local-maven") }
+        maven { url = 'https://maven.minecraftforge.net/' }
+        maven { url = 'https://maven.cleanroommc.com/' }
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'net.minecraftforge.gradle:ForgeGradle:3.0.197'
+    }
+}
+
+apply plugin: 'net.minecraftforge.gradle'
+apply plugin: 'eclipse'
+apply plugin: 'maven-publish'
+
+version = '1.0.2'
+group = 'top.npcpathfindinglegacy'
+archivesBaseName = 'NpcPathfindingLegacy-1.12.2'
+
+sourceCompatibility = targetCompatibility = compileJava.sourceCompatibility = compileJava.targetCompatibility = '1.8'
+
+minecraft {
+    mappings channel: 'snapshot', version: '20171003-1.12'
+
+    runs {
+        client {
+            workingDirectory project.file('run-client')
+            property 'forge.logging.console.level', 'info'
+            property 'mixin.debug.export', 'true'
+        }
+        server {
+            workingDirectory project.file('run-server')
+            property 'forge.logging.console.level', 'info'
+            property 'mixin.debug.export', 'true'
+        }
+    }
+}
+
+repositories {
+    maven { url = 'https://maven.cleanroommc.com/' }
+    mavenCentral()
+}
+
+def mixinBooter = file('libs/!mixinbooter-10.7.jar')
+def targetCustomNpcs = file('libs/customnpcs-target.jar')
+
+if (!mixinBooter.isFile()) {
+    throw new GradleException("Missing ${mixinBooter}")
+}
+if (!targetCustomNpcs.isFile()) {
+    throw new GradleException("Missing ${targetCustomNpcs}")
+}
+
+dependencies {
+    minecraft 'net.minecraftforge:forge:1.12.2-14.23.5.2859'
+    compileOnly files(mixinBooter)
+    compileOnly files(targetCustomNpcs)
+    annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
+    testImplementation 'junit:junit:4.13.2'
+}
+
+task syncRunClientMods(type: Sync) {
+    from files(mixinBooter, targetCustomNpcs)
+    into file('run-client/mods')
+}
+
+task syncRunServerMods(type: Sync) {
+    from files(mixinBooter, targetCustomNpcs)
+    into file('run-server/mods')
+}
+
+tasks.whenTaskAdded { task ->
+    if (task.name == 'runClient') {
+        task.dependsOn syncRunClientMods
+    }
+    if (task.name == 'runServer') {
+        task.dependsOn syncRunServerMods
+    }
+}
+
+compileJava {
+    options.encoding = 'UTF-8'
+}
+
+processResources {
+    inputs.property 'version', project.version
+    filesMatching('mcmod.info') {
+        expand 'version': project.version
+    }
+}
+
+jar {
+    manifest {
+        attributes([
+            'Specification-Title': 'npcpathfinding-legacy',
+            'Specification-Vendor': 'XiaoBiniaoX; 阿介的炒面 1.12.2 port',
+            'Specification-Version': '1',
+            'Implementation-Title': project.name,
+            'Implementation-Version': project.version,
+            'Implementation-Vendor': 'XiaoBiniaoX; 阿介的炒面 1.12.2 port',
+            'ForceLoadAsMod': 'true'
+        ])
+    }
+}
+
+jar.finalizedBy('reobfJar')
