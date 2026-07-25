@@ -1,0 +1,11 @@
+{
+  "npcpathfinding.gui.pathfinding": "Pathfinding",
+  "npcpathfinding.gui.mode": "Pathfinding Mode",
+  "npcpathfinding.gui.mode.vanilla": "CNPC Vanilla",
+  "npcpathfinding.gui.mode.baritone": "GooodPathfind",
+  "npcpathfinding.gui.walkTendency": "Walk Tendency",
+  "npcpathfinding.gui.jumpTendency": "Jump Tendency",
+  "npcpathfinding.gui.parkourMaxDist": "Parkour Max Distance",
+  "npcpathfinding.gui.chaseJumpInterval": "Flat Chase Jump Interval (ticks)",
+  "npcpathfinding.gui.done": "Done"
+}

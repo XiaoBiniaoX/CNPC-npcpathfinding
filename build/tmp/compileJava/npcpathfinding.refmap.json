@@ -1,0 +1,20 @@
+{
+  "mappings": {
+    "top/npcpathfinding/mixin/MixinPathNavigation": {
+      "setCanFloat": "Lnet/minecraft/world/entity/ai/navigation/PathNavigation;m_7008_(Z)V"
+    },
+    "top/npcpathfinding/mixin/MixinMobNavigation": {
+      "getNavigation": "Lnet/minecraft/world/entity/Mob;m_21573_()Lnet/minecraft/world/entity/ai/navigation/PathNavigation;"
+    }
+  },
+  "data": {
+    "searge": {
+      "top/npcpathfinding/mixin/MixinPathNavigation": {
+        "setCanFloat": "Lnet/minecraft/world/entity/ai/navigation/PathNavigation;m_7008_(Z)V"
+      },
+      "top/npcpathfinding/mixin/MixinMobNavigation": {
+        "getNavigation": "Lnet/minecraft/world/entity/Mob;m_21573_()Lnet/minecraft/world/entity/ai/navigation/PathNavigation;"
+      }
+    }
+  }
+}

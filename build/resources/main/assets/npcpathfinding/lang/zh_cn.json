@@ -1,0 +1,11 @@
+{
+  "npcpathfinding.gui.pathfinding": "寻路设置",
+  "npcpathfinding.gui.mode": "寻路模式",
+  "npcpathfinding.gui.mode.vanilla": "CNPC原版寻路",
+  "npcpathfinding.gui.mode.baritone": "好好好寻路",
+  "npcpathfinding.gui.walkTendency": "行走倾向",
+  "npcpathfinding.gui.jumpTendency": "跳跃倾向",
+  "npcpathfinding.gui.parkourMaxDist": "跑酷最大间隔(空格)",
+  "npcpathfinding.gui.chaseJumpInterval": "平地跑跳间隔(tick)",
+  "npcpathfinding.gui.done": "完成"
+}
