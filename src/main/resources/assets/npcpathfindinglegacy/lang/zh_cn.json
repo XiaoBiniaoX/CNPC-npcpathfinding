@@ -1,0 +1,12 @@
+{
+  "npcpathfindinglegacy.gui.open": "寻路设置",
+  "npcpathfindinglegacy.gui.title": "增强寻路",
+  "npcpathfindinglegacy.gui.mode": "寻路模式",
+  "npcpathfindinglegacy.gui.mode.vanilla": "原版寻路",
+  "npcpathfindinglegacy.gui.mode.enhanced": "增强寻路",
+  "npcpathfindinglegacy.gui.walkTendency": "行走倾向",
+  "npcpathfindinglegacy.gui.jumpTendency": "跳跃倾向",
+  "npcpathfindinglegacy.gui.parkourMaxDist": "跑酷最大间隔",
+  "npcpathfindinglegacy.gui.chaseJumpInterval": "追击跑跳间隔",
+  "npcpathfindinglegacy.gui.done": "完成"
+}
