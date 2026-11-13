@@ -6,7 +6,22 @@
   "refmap": "npcpathfindinglegacy.refmap.json",
   "mixins": [
     "MixinDataAI",
-    "MixinEntityNPCInterface"
+    "MixinDefaultPathfindingSave",
+    "MixinDefaultPathfindingGet",
+    "MixinNpcWandDefaultPathfinding",
+    "MixinScriptContainer",
+    "MixinEntityNPCInterface",
+    "MixinEntityPathfindingHooks",
+    "MixinLeapAtTargetGoal",
+    "MixinLivingEntityJump",
+    "MixinAvoidTargetNavigation",
+    "MixinPanicNavigation",
+    "MixinRangedCombatNavigation",
+    "MixinMeleeTacticalNavigation",
+    "MixinTacticalVariants",
+    "MixinTacticalNavigation",
+    "MixinTacticalMovementGoals",
+    "MixinTacticalTargetVisibility"
   ],
   "client": [
     "client.MixinGuiNpcAI"

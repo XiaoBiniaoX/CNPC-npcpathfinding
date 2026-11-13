@@ -1,11 +1,19 @@
 package top.npcpathfindinglegacy.pathfinding;
 
 final class JumpTrajectoryPlanner {
+    static final double MAX_JUMP_VELOCITY = 0.50D;
+    static final double MAX_PARKOUR_SPEED = 0.54D;
     private static final double GRAVITY = 0.08D;
     private static final double VERTICAL_DRAG = 0.98D;
     private static final int MAX_FLIGHT_TICKS = 32;
 
     private JumpTrajectoryPlanner() {
+    }
+
+    static double parkourVelocity(int tendency, int rise) {
+        double speed = 0.37 + 0.13 * tendency / 100.0 + Math.max(0, rise) * 0.055;
+        if (rise <= -2) speed = Math.max(0.38, speed - 0.04);
+        return ensureReachableVerticalSpeed(speed, Math.max(0, rise));
     }
 
     static int estimateFlightTicks(double startY, double initialVelocityY, double landingY) {
@@ -18,10 +26,10 @@ final class JumpTrajectoryPlanner {
             if (y >= landingY + 0.02D) {
                 reachedLandingHeight = true;
             }
-            velocityY = (velocityY - GRAVITY) * VERTICAL_DRAG;
-            if (reachedLandingHeight && velocityY <= 0.0D && y <= landingY + 0.12D) {
+            if (reachedLandingHeight && velocityY <= 0.0D && y <= landingY) {
                 return tick;
             }
+            velocityY = (velocityY - GRAVITY) * VERTICAL_DRAG;
         }
         return MAX_FLIGHT_TICKS;
     }
@@ -36,14 +44,14 @@ final class JumpTrajectoryPlanner {
 
     static double ensureReachableVerticalSpeed(double requestedSpeed, int rise) {
         if (rise <= 0) {
-            return requestedSpeed;
+            return Math.min(MAX_JUMP_VELOCITY, requestedSpeed);
         }
-        double speed = Math.max(0.35D, requestedSpeed);
+        double speed = Math.min(MAX_JUMP_VELOCITY, Math.max(0.35D, requestedSpeed));
         double requiredApex = rise + 0.12D;
-        while (speed < 0.76D && apexHeight(speed) < requiredApex) {
+        while (speed < MAX_JUMP_VELOCITY && apexHeight(speed) < requiredApex) {
             speed += 0.01D;
         }
-        return Math.min(0.76D, speed);
+        return Math.min(MAX_JUMP_VELOCITY, speed);
     }
 
     static double apexHeight(double initialVelocityY) {

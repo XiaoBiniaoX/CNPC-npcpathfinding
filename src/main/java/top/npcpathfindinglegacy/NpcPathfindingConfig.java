@@ -18,7 +18,7 @@ public final class NpcPathfindingConfig {
         .define("enabled", true);
 
     private static final ForgeConfigSpec.BooleanValue PREVENT_CHUNK_LOADS = BUILDER
-        .comment("Never query blocks in unloaded chunks while calculating a path.")
+        .comment("Compatibility setting. Asynchronous navigation always avoids unloaded chunks.")
         .define("preventChunkLoads", true);
 
     private static final ForgeConfigSpec.IntValue PATH_REUSE_TICKS = BUILDER
@@ -26,7 +26,7 @@ public final class NpcPathfindingConfig {
         .defineInRange("pathReuseTicks", 8, 1, 40);
 
     private static final ForgeConfigSpec.IntValue MAX_ENHANCED_SEARCHES_PER_TICK = BUILDER
-        .comment("Server-wide enhanced A* calculations allowed per server tick.")
+        .comment("Server-wide asynchronous path requests started per tick; workers and snapshot capture are bounded.")
         .defineInRange("maxEnhancedSearchesPerTick", 3, 1, 32);
 
     private static final ForgeConfigSpec.IntValue MAX_SEARCH_NODES = BUILDER

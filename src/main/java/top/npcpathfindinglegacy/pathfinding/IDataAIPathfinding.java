@@ -5,6 +5,10 @@ public interface IDataAIPathfinding {
 
     void npcpathfindinglegacy$setMode(int mode);
 
+    boolean npcpathfindinglegacy$getAllowSprint();
+
+    void npcpathfindinglegacy$setAllowSprint(boolean allowed);
+
     int npcpathfindinglegacy$getWalkTendency();
 
     void npcpathfindinglegacy$setWalkTendency(int value);
