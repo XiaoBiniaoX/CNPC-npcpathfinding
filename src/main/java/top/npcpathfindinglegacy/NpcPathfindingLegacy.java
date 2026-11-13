@@ -15,10 +15,14 @@ import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
 public final class NpcPathfindingLegacy {
     public static final String MOD_ID = "npcpathfindinglegacy";
     public static final String NAME = "NPC Pathfinding Legacy";
-    public static final String VERSION = "1.0.0";
+    public static final String VERSION = "2.0.0";
     public static final Logger LOG = LogUtils.getLogger();
 
     public NpcPathfindingLegacy(IEventBus modEventBus, ModContainer modContainer) {
+        net.neoforged.neoforge.common.NeoForge.EVENT_BUS.register(top.npcpathfindinglegacy.pathfinding.AsyncPathService.class);
+        net.neoforged.neoforge.common.NeoForge.EVENT_BUS.register(top.npcpathfindinglegacy.tactics.flow.FlowFieldService.class);
+        net.neoforged.neoforge.common.NeoForge.EVENT_BUS.register(top.npcpathfindinglegacy.tactics.group.SquadService.class);
+        net.neoforged.neoforge.common.NeoForge.EVENT_BUS.register(top.npcpathfindinglegacy.tactics.TacticalPositions.class);
         modContainer.registerConfig(ModConfig.Type.COMMON, NpcPathfindingConfig.SPEC);
         modEventBus.addListener(this::commonSetup);
         modEventBus.addListener(this::onConfigLoad);

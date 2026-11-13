@@ -35,3 +35,10 @@ config="mixins.npcpathfindinglegacy.json"
     versionRange="[1.0,)"
     ordering="NONE"
     side="BOTH"
+
+[[dependencies.${mod_id}]]
+    modId="cnpcplus"
+    type="required"
+    versionRange="[4.0.5,)"
+    ordering="AFTER"
+    side="BOTH"
