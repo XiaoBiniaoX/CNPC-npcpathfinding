@@ -12,14 +12,19 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import top.npcpathfindinglegacy.pathfinding.IDataAIPathfinding;
 import top.npcpathfindinglegacy.pathfinding.INpcPathfindingEntity;
+import top.npcpathfindinglegacy.tactics.ITacticsData;
+import top.npcpathfindinglegacy.tactics.TacticType;
 
 @Mixin(value = DataAI.class, remap = false)
-public abstract class MixinDataAI implements IDataAIPathfinding {
+public abstract class MixinDataAI implements IDataAIPathfinding, ITacticsData {
     @Shadow
     private EntityNPCInterface npc;
 
     @Unique
     private int npcpathfindinglegacy$mode;
+
+    @Unique
+    private boolean npcpathfindinglegacy$allowSprint;
 
     @Unique
     private int npcpathfindinglegacy$walkTendency = 50;
@@ -32,26 +37,38 @@ public abstract class MixinDataAI implements IDataAIPathfinding {
 
     @Unique
     private int npcpathfindinglegacy$chaseJumpInterval = 40;
+    @Unique private int npcpathfindinglegacy$tactic;
+    @Unique private int npcpathfindinglegacy$squad;
+    @Unique private int npcpathfindinglegacy$tacticRadius = 12;
 
     @Inject(method = "readToNBT", at = @At("TAIL"), remap = false)
     private void npcpathfindinglegacy$readSettings(NBTTagCompound compound, CallbackInfo ci) {
         int oldMode = this.npcpathfindinglegacy$mode;
-        if (compound.hasKey("NPC_PathfindingMode", 3)) {
-            this.npcpathfindinglegacy$mode = clamp(compound.getInteger("NPC_PathfindingMode"), 0, 1);
+        boolean oldSprint = this.npcpathfindinglegacy$allowSprint;
+        int oldTactic = npcpathfindinglegacy$tactic;
+        int oldSquad = npcpathfindinglegacy$squad;
+        npcpathfindinglegacy$tactic = TacticType.byId(compound.getInteger("NPC_TacticVariant")).id();
+        npcpathfindinglegacy$squad = clamp(compound.getInteger("NPC_TacticSquad"), 0, 9999);
+        npcpathfindinglegacy$tacticRadius = compound.hasKey("NPC_TacticRadius")
+            ? clamp(compound.getInteger("NPC_TacticRadius"), 3, 24) : 12;
+        if (compound.hasKey("NPC_PathfindingMode")) {
+            this.npcpathfindinglegacy$mode = clamp(compound.getInteger("NPC_PathfindingMode"), 0, 7);
         }
-        if (compound.hasKey("NPC_WalkTendency", 3)) {
+        this.npcpathfindinglegacy$allowSprint = compound.getBoolean("NPC_PathfindingAllowSprint");
+        if (compound.hasKey("NPC_WalkTendency")) {
             this.npcpathfindinglegacy$walkTendency = clamp(compound.getInteger("NPC_WalkTendency"), 0, 100);
         }
-        if (compound.hasKey("NPC_JumpTendency", 3)) {
+        if (compound.hasKey("NPC_JumpTendency")) {
             this.npcpathfindinglegacy$jumpTendency = clamp(compound.getInteger("NPC_JumpTendency"), 0, 100);
         }
-        if (compound.hasKey("NPC_ParkourMaxDist", 3)) {
+        if (compound.hasKey("NPC_ParkourMaxDist")) {
             this.npcpathfindinglegacy$parkourMaxDist = clamp(compound.getInteger("NPC_ParkourMaxDist"), 0, 5);
         }
-        if (compound.hasKey("NPC_ChaseJumpInterval", 3)) {
+        if (compound.hasKey("NPC_ChaseJumpInterval")) {
             this.npcpathfindinglegacy$chaseJumpInterval = clamp(compound.getInteger("NPC_ChaseJumpInterval"), 0, 200);
         }
-        if (oldMode != this.npcpathfindinglegacy$mode) {
+        if (oldMode != this.npcpathfindinglegacy$mode || oldSprint != this.npcpathfindinglegacy$allowSprint
+            || oldTactic != npcpathfindinglegacy$tactic || oldSquad != npcpathfindinglegacy$squad) {
             this.npcpathfindinglegacy$notifyNavigationChanged();
         }
     }
@@ -66,11 +83,28 @@ public abstract class MixinDataAI implements IDataAIPathfinding {
             result = compound;
         }
         result.setInteger("NPC_PathfindingMode", this.npcpathfindinglegacy$mode);
+        result.setBoolean("NPC_PathfindingAllowSprint", this.npcpathfindinglegacy$allowSprint);
         result.setInteger("NPC_WalkTendency", this.npcpathfindinglegacy$walkTendency);
         result.setInteger("NPC_JumpTendency", this.npcpathfindinglegacy$jumpTendency);
         result.setInteger("NPC_ParkourMaxDist", this.npcpathfindinglegacy$parkourMaxDist);
         result.setInteger("NPC_ChaseJumpInterval", this.npcpathfindinglegacy$chaseJumpInterval);
+        result.setInteger("NPC_TacticVariant", npcpathfindinglegacy$tactic);
+        result.setInteger("NPC_TacticSquad", npcpathfindinglegacy$squad);
+        result.setInteger("NPC_TacticRadius", npcpathfindinglegacy$tacticRadius);
     }
+
+    public int npcpathfindinglegacy$getTactic() { return npcpathfindinglegacy$tactic; }
+    public void npcpathfindinglegacy$setTactic(int id) {
+        int next = TacticType.byId(id).id();
+        if (next == npcpathfindinglegacy$tactic) return;
+        npcpathfindinglegacy$tactic = next; npcpathfindinglegacy$notifyNavigationChanged();
+    }
+    public int npcpathfindinglegacy$getSquad() { return npcpathfindinglegacy$squad; }
+    public void npcpathfindinglegacy$setSquad(int squad) {
+        npcpathfindinglegacy$squad = clamp(squad, 0, 9999); npcpathfindinglegacy$notifyNavigationChanged();
+    }
+    public int npcpathfindinglegacy$getTacticRadius() { return npcpathfindinglegacy$tacticRadius; }
+    public void npcpathfindinglegacy$setTacticRadius(int radius) { npcpathfindinglegacy$tacticRadius = clamp(radius, 3, 24); }
 
     @Override
     public int npcpathfindinglegacy$getMode() {
@@ -79,11 +113,21 @@ public abstract class MixinDataAI implements IDataAIPathfinding {
 
     @Override
     public void npcpathfindinglegacy$setMode(int mode) {
-        int normalized = clamp(mode, 0, 1);
+        int normalized = clamp(mode, 0, 7);
         if (this.npcpathfindinglegacy$mode == normalized) {
             return;
         }
         this.npcpathfindinglegacy$mode = normalized;
+        this.npcpathfindinglegacy$notifyNavigationChanged();
+    }
+
+    @Override
+    public boolean npcpathfindinglegacy$getAllowSprint() { return this.npcpathfindinglegacy$allowSprint; }
+
+    @Override
+    public void npcpathfindinglegacy$setAllowSprint(boolean allowed) {
+        if (this.npcpathfindinglegacy$allowSprint == allowed) return;
+        this.npcpathfindinglegacy$allowSprint = allowed;
         this.npcpathfindinglegacy$notifyNavigationChanged();
     }
 

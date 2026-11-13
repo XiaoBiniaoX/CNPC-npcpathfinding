@@ -10,4 +10,6 @@ public interface INpcPathfindingEntity {
     void npcpathfindinglegacy$refreshNavigationMode();
 
     void npcpathfindinglegacy$clearEnhancedState();
+
+    void npcpathfindinglegacy$requestAiRefresh();
 }

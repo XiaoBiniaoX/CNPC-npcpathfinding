@@ -1,12 +1,13 @@
 package top.npcpathfindinglegacy.mixin;
 
 import net.minecraft.entity.EntityCreature;
-import net.minecraft.pathfinding.PathNavigate;
 import net.minecraft.pathfinding.PathNavigateGround;
+import net.minecraft.pathfinding.PathNavigate;
 import net.minecraft.world.World;
 import noppes.npcs.entity.EntityNPCInterface;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -17,6 +18,9 @@ import top.npcpathfindinglegacy.pathfinding.INpcPathfindingEntity;
 
 @Mixin(value = EntityNPCInterface.class, remap = false)
 public abstract class MixinEntityNPCInterface extends EntityCreature implements INpcPathfindingEntity {
+    @Shadow private int taskCount;
+    @Shadow private void updateTasks() { throw new AssertionError("Mixin shadow"); }
+    @Unique private boolean npcpathfindinglegacy$refreshAiRequested;
     @Unique
     private PathNavigate npcpathfindinglegacy$vanillaNavigation;
 
@@ -26,12 +30,20 @@ public abstract class MixinEntityNPCInterface extends EntityCreature implements 
     @Unique
     private int npcpathfindinglegacy$lastMode = -1;
 
-    protected MixinEntityNPCInterface(World world) {
-        super(world);
+    protected MixinEntityNPCInterface(World level) {
+        super(level);
+    }
+    @Inject(method = "setMoveType", at = @At("HEAD"), remap = false)
+    private void npcpathfindinglegacy$addFormationFollow(CallbackInfo ci) {
+        EntityNPCInterface npc = (EntityNPCInterface)(Object)this;
+        if (npc.ais instanceof top.npcpathfindinglegacy.tactics.ITacticsData
+            && (((top.npcpathfindinglegacy.tactics.ITacticsData)(npc.ais)).npcpathfindinglegacy$getTactic() == 8 || ((top.npcpathfindinglegacy.tactics.ITacticsData)(npc.ais)).npcpathfindinglegacy$getTactic() == 9)) {
+            tasks.addTask(0,new top.npcpathfindinglegacy.tactics.group.FormationFollowGoal(npc));
+        }
     }
 
     @Inject(method = "<init>", at = @At("TAIL"), remap = false)
-    private void npcpathfindinglegacy$initialize(World world, CallbackInfo ci) {
+    private void npcpathfindinglegacy$initialize(World level, CallbackInfo ci) {
         this.npcpathfindinglegacy$vanillaNavigation = this.navigator;
         this.npcpathfindinglegacy$refreshNavigationMode();
     }
@@ -47,13 +59,21 @@ public abstract class MixinEntityNPCInterface extends EntityCreature implements 
         this.npcpathfindinglegacy$refreshNavigationMode();
     }
 
+    // Entity.aiStep is func_70636_d in the reobfuscated game/CNPC jar.
     @Inject(method = "func_70636_d", at = @At("HEAD"), remap = false)
     private void npcpathfindinglegacy$beforeNpcTick(CallbackInfo ci) {
+        if (npcpathfindinglegacy$refreshAiRequested && !world.isRemote) {
+            npcpathfindinglegacy$refreshAiRequested = false;
+            updateTasks();
+            ((EntityNPCInterface)(Object)this).updateAI = false;
+        }
         this.npcpathfindinglegacy$refreshNavigationMode();
+        top.npcpathfindinglegacy.tactics.TacticsRuntime.tick((EntityNPCInterface)(Object)this);
     }
 
-    @Inject(method = "func_70636_d", at = @At("TAIL"), remap = false)
+    @Inject(method = "func_70636_d", at = @At("RETURN"), remap = false)
     private void npcpathfindinglegacy$afterNpcTick(CallbackInfo ci) {
+        top.npcpathfindinglegacy.tactics.TacticsRuntime.keepMoving((EntityNPCInterface)(Object)this);
         if (this.navigator == this.npcpathfindinglegacy$enhancedNavigation
             && this.npcpathfindinglegacy$enhancedNavigation != null) {
             this.npcpathfindinglegacy$enhancedNavigation.applyPostAiMovementLock();
@@ -79,10 +99,11 @@ public abstract class MixinEntityNPCInterface extends EntityCreature implements 
         }
 
         boolean useEnhanced = NpcPathfindingConfig.enabled
-            && mode == 1
+            && mode >= 1 && mode <= 7
             && npc.ais != null
             && npc.ais.movementType == 0
-            && this.world != null;
+            && this.world != null
+            && !this.world.isRemote;
 
         if (this.npcpathfindinglegacy$lastMode != mode) {
             this.npcpathfindinglegacy$lastMode = mode;
@@ -92,6 +113,7 @@ public abstract class MixinEntityNPCInterface extends EntityCreature implements 
         if (!useEnhanced) {
             if (this.navigator == this.npcpathfindinglegacy$enhancedNavigation
                 && this.npcpathfindinglegacy$vanillaNavigation != null) {
+                this.npcpathfindinglegacy$enhancedNavigation.clearPath();
                 this.navigator = this.npcpathfindinglegacy$vanillaNavigation;
             }
             return;
@@ -107,6 +129,9 @@ public abstract class MixinEntityNPCInterface extends EntityCreature implements 
         this.npcpathfindinglegacy$enhancedNavigation.refreshCapabilities();
         this.navigator = this.npcpathfindinglegacy$enhancedNavigation;
     }
+
+    @Override
+    public void npcpathfindinglegacy$requestAiRefresh() { npcpathfindinglegacy$refreshAiRequested = true; }
 
     @Override
     public void npcpathfindinglegacy$clearEnhancedState() {

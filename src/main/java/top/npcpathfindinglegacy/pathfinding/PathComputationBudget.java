@@ -8,23 +8,47 @@ final class PathComputationBudget {
     private static Object tickOwner;
     private static long currentTick = Long.MIN_VALUE;
     private static int used;
+    private static int sampledBlocks;
 
     private PathComputationBudget() {
     }
 
-    static synchronized boolean tryAcquire(World world) {
-        MinecraftServer server = world.getMinecraftServer();
-        Object owner = server == null ? world : server;
-        long tick = server == null ? world.getTotalWorldTime() : server.getTickCounter();
+    static synchronized boolean tryAcquire(World level) {
+        MinecraftServer server = level.getMinecraftServer();
+        Object owner = server == null ? level : server;
+        long tick = server == null ? level.getTotalWorldTime() : server.getTickCounter();
         if (tickOwner != owner || currentTick != tick) {
             tickOwner = owner;
             currentTick = tick;
             used = 0;
+            sampledBlocks = 0;
         }
         if (used >= NpcPathfindingConfig.maxEnhancedSearchesPerTick) {
             return false;
         }
         used++;
         return true;
+    }
+
+    static synchronized int acquireSnapshotBlocks(World level) {
+        MinecraftServer server = level.getMinecraftServer();
+        Object owner = server == null ? level : server;
+        long tick = server == null ? level.getTotalWorldTime() : server.getTickCounter();
+        if (tickOwner != owner || currentTick != tick) {
+            tickOwner = owner;
+            currentTick = tick;
+            used = 0;
+            sampledBlocks = 0;
+        }
+        int count = Math.min(Math.min(4096,AsyncPathService.snapshotBlockAllowance()), Math.max(0, 8192 - sampledBlocks));
+        sampledBlocks += count;
+        return count;
+    }
+
+    static synchronized void reset() {
+        tickOwner = null;
+        currentTick = Long.MIN_VALUE;
+        used = 0;
+        sampledBlocks = 0;
     }
 }

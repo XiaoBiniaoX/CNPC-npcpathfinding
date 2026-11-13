@@ -10,17 +10,19 @@ import org.apache.logging.log4j.Logger;
     modid = NpcPathfindingLegacy.MOD_ID,
     name = NpcPathfindingLegacy.NAME,
     version = NpcPathfindingLegacy.VERSION,
-    acceptableRemoteVersions = "*",
-    dependencies = "required-after:customnpcs"
+    acceptableRemoteVersions = "[2.0.0,)",
+    dependencies = "required-after:customnpcs;required-after:cnpcplus@[4.0.5,);required-after:mixinbooter"
 )
 public final class NpcPathfindingLegacy {
     public static final String MOD_ID = "npcpathfindinglegacy";
     public static final String NAME = "NPC Pathfinding Legacy";
-    public static final String VERSION = "1.0.2";
+    public static final String VERSION = "2.0.0";
     public static final Logger LOG = LogManager.getLogger(NAME);
 
     @Mod.EventHandler
     public void preInit(FMLPreInitializationEvent event) {
+        // Only ServerTickEvent uses the Forge bus; stopping is forwarded by the FML handler below.
+        net.minecraftforge.common.MinecraftForge.EVENT_BUS.register(top.npcpathfindinglegacy.tactics.flow.FlowFieldService.class);
         NpcPathfindingConfig.load(event.getSuggestedConfigurationFile());
         LOG.info(
             "[NPC Pathfinding Legacy] Loaded {}. CustomNPCs SRParasites compatibility layer detected: {}",
@@ -39,6 +41,15 @@ public final class NpcPathfindingLegacy {
             NpcPathfindingConfig.maxEnhancedSearchesPerTick,
             NpcPathfindingConfig.maxSearchNodes
         );
+    }
+
+    @Mod.EventHandler
+    public void serverStopping(net.minecraftforge.fml.common.event.FMLServerStoppingEvent event) {
+        // 1.12.2 lifecycle events are delivered by FML, not MinecraftForge.EVENT_BUS.
+        top.npcpathfindinglegacy.pathfinding.AsyncPathService.onServerStopping(event);
+        top.npcpathfindinglegacy.tactics.flow.FlowFieldService.stopped(event);
+        top.npcpathfindinglegacy.tactics.group.SquadService.stopped(event);
+        top.npcpathfindinglegacy.tactics.TacticalPositions.stopped(event);
     }
 
     private static boolean classExists(String name) {

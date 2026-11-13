@@ -2,11 +2,11 @@
   {
     "modid": "npcpathfindinglegacy",
     "name": "NPC Pathfinding Legacy",
-    "description": "Forge 1.12.2 port of npcpathfinding for the SRParasites-compatible CustomNPCs v19 build.",
+    "description": "Modular pathfinding, tactics and editor settings for CustomNPCs and CNPCplus on Forge 1.12.2.",
     "version": "${version}",
     "mcversion": "1.12.2",
     "authorList": ["XiaoBiniaoX (original)", "阿介的炒面 (1.12.2 port)"],
     "credits": "Original npcpathfinding 1.20.1 mod and behavior by XiaoBiniaoX; Forge 1.12.2 compatibility port by 阿介的炒面.",
-    "dependencies": ["customnpcs"]
+    "dependencies": ["customnpcs", "cnpcplus@[4.0.5,)", "mixinbooter"]
   }
 ]

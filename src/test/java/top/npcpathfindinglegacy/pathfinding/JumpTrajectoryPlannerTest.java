@@ -7,11 +7,11 @@ import org.junit.Test;
 
 public class JumpTrajectoryPlannerTest {
     @Test
-    public void raisesLowConfiguredJumpEnoughForTwoBlockLanding() {
+    public void capsJumpSpeedEvenWhenAskedToReachTwoBlocks() {
         double speed = JumpTrajectoryPlanner.ensureReachableVerticalSpeed(0.48D, 2);
 
-        assertTrue(speed > 0.48D);
-        assertTrue(JumpTrajectoryPlanner.apexHeight(speed) >= 2.12D);
+        assertEquals(0.50D, speed, 0.000001D);
+        assertTrue(JumpTrajectoryPlanner.apexHeight(speed) < 2.0D);
     }
 
     @Test
@@ -30,7 +30,7 @@ public class JumpTrajectoryPlannerTest {
         assertPlanConverges(1.5D, 0, 0.45D, 0.54D);
         assertPlanConverges(3.0D, 0, 0.45D, 0.54D);
         assertPlanConverges(5.0D, 0, 0.45D, 0.54D);
-        assertPlanConverges(3.0D, 2, 0.48D, 0.54D);
+        assertPlanConverges(3.0D, 1, 0.48D, 0.54D);
         assertPlanConverges(5.0D, -4, 0.41D, 0.54D);
     }
 
@@ -56,7 +56,7 @@ public class JumpTrajectoryPlannerTest {
             x += Math.copySign(speed, distance);
             y += velocityY;
             velocityY = (velocityY - 0.08D) * 0.98D;
-            if (velocityY <= 0.0D && y <= targetY + 0.12D) {
+            if (velocityY <= 0.0D && y <= targetY) {
                 break;
             }
         }

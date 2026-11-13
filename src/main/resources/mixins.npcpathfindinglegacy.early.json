@@ -1,0 +1,18 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "compatibilityLevel": "JAVA_8",
+  "package": "top.npcpathfindinglegacy.mixin",
+  "mixins": [
+    "MixinEntityPathfindingHooks",
+    "MixinLeapAtTargetGoal",
+    "MixinLivingEntityJump",
+    "MixinTacticalNavigation",
+    "MixinTacticalTargetVisibility"
+  ],
+  "client": [],
+  "server": [],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

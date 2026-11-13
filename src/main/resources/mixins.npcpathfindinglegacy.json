@@ -1,11 +1,22 @@
 {
-  "required": false,
+  "required": true,
   "minVersion": "0.8",
   "compatibilityLevel": "JAVA_8",
   "package": "top.npcpathfindinglegacy.mixin",
   "mixins": [
     "MixinDataAI",
-    "MixinEntityNPCInterface"
+    "MixinDefaultPathfindingSave",
+    "MixinDefaultPathfindingGet",
+    "MixinNpcWandDefaultPathfinding",
+    "MixinScriptContainer",
+    "MixinEntityNPCInterface",
+    "MixinAvoidTargetNavigation",
+    "MixinPanicNavigation",
+    "MixinRangedCombatNavigation",
+    "MixinMeleeTacticalNavigation",
+    "MixinTacticalVariants",
+    "MixinTacticalMovementGoals",
+    "MixinFormationInteraction"
   ],
   "client": [
     "client.MixinGuiNpcAI"
