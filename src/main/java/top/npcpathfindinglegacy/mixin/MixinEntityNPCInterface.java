@@ -69,14 +69,16 @@ public abstract class MixinEntityNPCInterface extends PathfinderMob implements I
             ((EntityNPCInterface)(Object)this).updateAI = false;
         }
         this.npcpathfindinglegacy$refreshNavigationMode();
+        top.npcpathfindinglegacy.tactics.TacticsRuntime.tick((EntityNPCInterface)(Object)this);
     }
 
-    @Inject(method = "m_8107_", at = @At("TAIL"), remap = false)
+    @Inject(method = "m_8107_", at = @At("RETURN"), remap = false)
     private void npcpathfindinglegacy$afterNpcTick(CallbackInfo ci) {
         if (this.navigation == this.npcpathfindinglegacy$enhancedNavigation
             && this.npcpathfindinglegacy$enhancedNavigation != null) {
             this.npcpathfindinglegacy$enhancedNavigation.applyPostAiMovementLock();
         }
+        top.npcpathfindinglegacy.traffic.TrafficController.afterAi((EntityNPCInterface)(Object)this);
     }
 
     @Override

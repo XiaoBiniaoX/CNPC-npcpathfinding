@@ -12,14 +12,16 @@ import noppes.npcs.shared.client.gui.listeners.ICustomScrollListener;
 import noppes.npcs.shared.client.gui.listeners.ITextfieldListener;
 import top.npcpathfindinglegacy.tactics.ITacticsData;
 import top.npcpathfindinglegacy.tactics.TacticType;
+import top.npcpathfindinglegacy.pathfinding.IDataAIPathfinding;
 
 public final class SubGuiNpcTactics extends SettingsPanel implements ITextfieldListener, ICustomScrollListener {
     private final ITacticsData data;
+    private final IDataAIPathfinding pathfinding;
     private TacticType selected, preview;
     private int tab;
     private GuiCustomScrollNop tactics;
     public SubGuiNpcTactics(DataAI ai) {
-        data = (ITacticsData) ai; selected = TacticType.byId(data.npcpathfindinglegacy$getTactic());
+        data = (ITacticsData) ai; pathfinding = (IDataAIPathfinding)ai; selected = TacticType.byId(data.npcpathfindinglegacy$getTactic());
         preview = selected; tab = selected.group() || selected == TacticType.ASSAULT ? 1 : 2;
     }
     private List<TacticType> choices() {
@@ -34,23 +36,25 @@ public final class SubGuiNpcTactics extends SettingsPanel implements ITextfieldL
             "npcpathfindinglegacy.tactics.tab." + i,i == tab);
         tactics = list(tactics,guiTop + 88,choices().stream().map(TacticType::key).toList(),selected.key());
         if (preview != TacticType.ASSAULT) {
-            number(2,guiLeft + imageWidth - 66,guiTop + imageHeight - 65,data.npcpathfindinglegacy$getTacticRadius(),3,24);
-            if (preview.group()) number(1,guiLeft + imageWidth - 66,guiTop + imageHeight - 88,data.npcpathfindinglegacy$getSquad(),0,9999);
+            number(2,guiLeft + imageWidth - 66,guiTop + imageHeight - 88,data.npcpathfindinglegacy$getTacticRadius(),3,24);
+            if (preview.group()) number(1,guiLeft + imageWidth - 66,guiTop + imageHeight - 111,data.npcpathfindinglegacy$getSquad(),0,9999);
         }
+        comfortDistance(3,guiTop + imageHeight - 58,pathfinding.npcpathfindinglegacy$getComfortDistance());
         button(66,guiLeft + imageWidth - 76,guiTop + imageHeight - 25,64,"npcpathfindinglegacy.gui.done",false);
     }
     @Override public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
         panel(graphics,"ai.tacticalvariant");
         int x = right(), y = guiTop + 40;
         text(graphics,preview.key(),x,y,SELECTED);
-        int bottom = guiTop + imageHeight - (preview == TacticType.ASSAULT ? 40 : preview.group() ? 96 : 73);
+        int bottom = guiTop + imageHeight - (preview == TacticType.ASSAULT ? 66 : preview.group() ? 119 : 96);
         if (preview == TacticType.FORMATION) description(graphics,y + 19,bottom,preview.key() + ".hint",
-            "npcpathfindinglegacy.tactics.weapon_hint","npcpathfindinglegacy.tactics.formation_hint");
-        else description(graphics,y + 19,bottom,preview.key() + ".hint","npcpathfindinglegacy.tactics.weapon_hint");
+            "npcpathfindinglegacy.tactics.weapon_hint","npcpathfindinglegacy.tactics.formation_hint","npcpathfindinglegacy.gui.traffic_hint");
+        else description(graphics,y + 19,bottom,preview.key() + ".hint","npcpathfindinglegacy.tactics.weapon_hint","npcpathfindinglegacy.gui.traffic_hint");
         if (preview != TacticType.ASSAULT) {
-            text(graphics,"npcpathfindinglegacy.tactics.radius",x,guiTop + imageHeight - 61,TEXT);
-            if (preview.group()) text(graphics,"npcpathfindinglegacy.tactics.squad",x,guiTop + imageHeight - 84,TEXT);
+            text(graphics,"npcpathfindinglegacy.tactics.radius",x,guiTop + imageHeight - 84,TEXT);
+            if (preview.group()) text(graphics,"npcpathfindinglegacy.tactics.squad",x,guiTop + imageHeight - 107,TEXT);
         }
+        text(graphics,"npcpathfindinglegacy.gui.comfortDistance",x,guiTop + imageHeight - 54,TEXT);
         graphics.drawString(font,Component.translatable("npcpathfindinglegacy.tactics.current",
             Component.translatable(selected.key())),guiLeft + 12,guiTop + imageHeight - 19,MUTED,false);
         super.render(graphics,mouseX,mouseY,partialTicks);
@@ -76,5 +80,6 @@ public final class SubGuiNpcTactics extends SettingsPanel implements ITextfieldL
     @Override public void unFocused(GuiTextFieldNop field) {
         if (field.id == 1) data.npcpathfindinglegacy$setSquad(field.getInteger());
         if (field.id == 2) data.npcpathfindinglegacy$setTacticRadius(field.getInteger());
+        if (field.id == 3) pathfinding.npcpathfindinglegacy$setComfortDistance(field.getFloat());
     }
 }

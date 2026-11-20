@@ -40,6 +40,7 @@ public abstract class MixinDataAI implements IDataAIPathfinding, ITacticsData {
     @Unique private int npcpathfindinglegacy$tactic;
     @Unique private int npcpathfindinglegacy$squad;
     @Unique private int npcpathfindinglegacy$tacticRadius = 12;
+    @Unique private double npcpathfindinglegacy$comfortDistance = 1.4;
 
     @Inject(method = "readToNBT", at = @At("TAIL"), remap = false)
     private void npcpathfindinglegacy$readSettings(CompoundTag compound, CallbackInfo ci) {
@@ -47,6 +48,8 @@ public abstract class MixinDataAI implements IDataAIPathfinding, ITacticsData {
         boolean oldSprint = this.npcpathfindinglegacy$allowSprint;
         int oldTactic = npcpathfindinglegacy$tactic;
         int oldSquad = npcpathfindinglegacy$squad;
+        npcpathfindinglegacy$setComfortDistance(compound.contains("NPC_ComfortDistance",net.minecraft.nbt.Tag.TAG_ANY_NUMERIC)
+            ? compound.getDouble("NPC_ComfortDistance") : 1.4);
         npcpathfindinglegacy$tactic = TacticType.byId(compound.getInt("NPC_TacticVariant")).id();
         npcpathfindinglegacy$squad = clamp(compound.getInt("NPC_TacticSquad"), 0, 9999);
         npcpathfindinglegacy$tacticRadius = compound.contains("NPC_TacticRadius")
@@ -91,9 +94,14 @@ public abstract class MixinDataAI implements IDataAIPathfinding, ITacticsData {
         result.putInt("NPC_TacticVariant", npcpathfindinglegacy$tactic);
         result.putInt("NPC_TacticSquad", npcpathfindinglegacy$squad);
         result.putInt("NPC_TacticRadius", npcpathfindinglegacy$tacticRadius);
+        result.putDouble("NPC_ComfortDistance",npcpathfindinglegacy$comfortDistance);
     }
 
     public int npcpathfindinglegacy$getTactic() { return npcpathfindinglegacy$tactic; }
+    public double npcpathfindinglegacy$getComfortDistance() { return npcpathfindinglegacy$comfortDistance; }
+    public void npcpathfindinglegacy$setComfortDistance(double distance) {
+        npcpathfindinglegacy$comfortDistance = Double.isFinite(distance) ? Math.max(0,Math.min(8,distance)) : 1.4;
+    }
     public void npcpathfindinglegacy$setTactic(int id) {
         int next = TacticType.byId(id).id();
         if (next == npcpathfindinglegacy$tactic) return;

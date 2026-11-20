@@ -19,6 +19,7 @@ final class WallMovementController {
     }
 
     void reset() { climbMotion = null; }
+    boolean directMovement() { return climbMotion != null; }
 
     void follow() {
         reset(); npc.setSprinting(false);

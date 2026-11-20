@@ -13,7 +13,7 @@ import top.npcpathfindinglegacy.tactics.TacticsRuntime;
 /** Sprint's MOVE flag otherwise excludes the weapon goals while ranged tactics keep their distance. */
 @Mixin(value = {EntityAISprintToTarget.class, EntityAIPounceTarget.class}, remap = false)
 public abstract class MixinTacticalMovementGoals {
-    @Shadow private EntityNPCInterface npc;
+    @Shadow(remap = false) private EntityNPCInterface npc;
 
     @Inject(method = {"m_8036_", "m_8045_"}, at = @At("HEAD"), cancellable = true, remap = false)
     private void npcpathfindinglegacy$releaseMovementGoal(CallbackInfoReturnable<Boolean> cir) {

@@ -16,7 +16,7 @@ import noppes.npcs.entity.EntityNPCInterface;
 /** Cheap candidate filtering before cover rays; short reservations keep units from stacking. */
 public final class TacticalPositions {
     private record Key(net.minecraft.resources.ResourceLocation dimension, BlockPos position) {}
-    private record Reservation(UUID owner, long expires) {}
+    private record Reservation(UUID owner, long expires, double radius, double comfort) {}
     private static final Map<Key, Reservation> RESERVED = new LinkedHashMap<>();
     private static long rayTick = Long.MIN_VALUE;
     private static int rays;
@@ -34,9 +34,7 @@ public final class TacticalPositions {
                 for (int dy : new int[]{0,1,-1,2,-2,3,-3}) {
                     BlockPos pos = column.offset(0, dy, 0);
                     if (!standable(npc, pos)) continue;
-                    Key key = new Key(level.dimension().location(), pos);
-                    Reservation reservation = RESERVED.get(key);
-                    if (reservation != null && !reservation.owner().equals(npc.getUUID())) continue;
+                    if (!available(npc,pos)) continue;
                     double cost = pos.distSqr(BlockPos.containing(desired)) + npc.blockPosition().distSqr(pos) * 0.1;
                     if (cost >= score) continue;
                     if (cost < score) { score = cost; best = pos; }
@@ -72,8 +70,16 @@ public final class TacticalPositions {
         return true;
     }
     private static boolean available(EntityNPCInterface npc, BlockPos pos) {
-        Reservation other = RESERVED.get(new Key(npc.level().dimension().location(),pos));
-        return other == null || other.expires() <= npc.level().getGameTime() || other.owner().equals(npc.getUUID());
+        for (var entry : RESERVED.entrySet()) {
+            Reservation other = entry.getValue();
+            if (!entry.getKey().dimension().equals(npc.level().dimension().location()) || other.expires() <= npc.level().getGameTime()
+                || other.owner().equals(npc.getUUID()) || Math.abs(entry.getKey().position().getY() - pos.getY()) > 1) continue;
+            double distance = npc.getBbWidth() / 2 + other.radius()
+                + (top.npcpathfindinglegacy.traffic.TrafficController.comfort(npc) + other.comfort()) / 2;
+            int dx = entry.getKey().position().getX() - pos.getX(), dz = entry.getKey().position().getZ() - pos.getZ();
+            if (dx * dx + dz * dz < distance * distance) return false;
+        }
+        return true;
     }
     public static BlockPos findCover(EntityNPCInterface npc, TacticsState state, int radius) {
         if (state == null || npc.getTarget() == null) return null;
@@ -135,7 +141,8 @@ public final class TacticalPositions {
 
     public static void reserve(EntityNPCInterface npc, BlockPos destination) {
         if (RESERVED.size() >= 256) RESERVED.remove(RESERVED.keySet().iterator().next());
-        RESERVED.put(new Key(npc.level().dimension().location(), destination), new Reservation(npc.getUUID(), npc.level().getGameTime() + 35));
+        RESERVED.put(new Key(npc.level().dimension().location(), destination), new Reservation(npc.getUUID(), npc.level().getGameTime() + 35,
+            npc.getBbWidth() / 2,top.npcpathfindinglegacy.traffic.TrafficController.comfort(npc)));
     }
 
     public static boolean standable(EntityNPCInterface npc, BlockPos pos) {

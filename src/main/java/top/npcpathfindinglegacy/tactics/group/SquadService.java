@@ -77,7 +77,8 @@ public final class SquadService {
             long shapeChanged = time;
             if (cached != null && cached.leader().equals(elected.getUUID()) && shape != Formation.Shape.COLUMN && time - cached.shapeChanged() < 60) shape = cached.shape();
             if (cached != null && cached.shape() == shape) shapeChanged = cached.shapeChanged();
-            double spacing = Math.max(2,members.stream().mapToDouble(EntityNPCInterface::getBbWidth).max().orElse(0.6) + 0.8);
+            double spacing = Math.max(1,members.stream().mapToDouble(other -> other.getBbWidth()
+                + top.npcpathfindinglegacy.traffic.TrafficController.comfort(other)).max().orElse(2));
             List<UUID> ids = members.stream().map(EntityNPCInterface::getUUID).toList();
             if (formation) {
                 if (cached != null && cached.leader().equals(elected.getUUID()) && cached.shape() == shape

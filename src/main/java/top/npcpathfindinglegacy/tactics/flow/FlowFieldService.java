@@ -36,6 +36,7 @@ public final class FlowFieldService {
 
     public static BlockPos waypoint(EntityNPCInterface npc, BlockPos destination, int squad) {
         if (!(npc.level() instanceof ServerLevel level) || !level.getServer().isSameThread()) return destination;
+        if (top.npcpathfindinglegacy.traffic.TrafficController.avoidsFlow(npc)) return destination;
         long time = level.getServer().getTickCount();
         if (budgetTick != time) { budgetTick = time; sampled = 0; }
         FIELDS.entrySet().removeIf(e -> {

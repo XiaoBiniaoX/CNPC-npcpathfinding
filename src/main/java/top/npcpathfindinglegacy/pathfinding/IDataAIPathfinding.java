@@ -1,6 +1,10 @@
 package top.npcpathfindinglegacy.pathfinding;
 
 public interface IDataAIPathfinding {
+    double npcpathfindinglegacy$getComfortDistance();
+
+    void npcpathfindinglegacy$setComfortDistance(double distance);
+
     int npcpathfindinglegacy$getMode();
 
     void npcpathfindinglegacy$setMode(int mode);

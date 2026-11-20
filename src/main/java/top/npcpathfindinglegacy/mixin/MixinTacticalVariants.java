@@ -22,9 +22,6 @@ public abstract class MixinTacticalVariants implements ITacticsEntity {
         ((EntityNPCInterface)(Object)this).ais.tacticalVariant = 0;
         npcpathfindinglegacy$tactics.reset();
     }
-    @Inject(method = "m_8107_", at = @At("HEAD"), remap = false)
-    private void npcpathfindinglegacy$updateTactics(CallbackInfo ci) { TacticsRuntime.tick((EntityNPCInterface)(Object)this); }
-
     @Inject(method = "m_7327_", at = @At("HEAD"), cancellable = true, remap = false)
     private void npcpathfindinglegacy$holdMelee(Entity target, CallbackInfoReturnable<Boolean> cir) {
         EntityNPCInterface npc = (EntityNPCInterface)(Object)this;

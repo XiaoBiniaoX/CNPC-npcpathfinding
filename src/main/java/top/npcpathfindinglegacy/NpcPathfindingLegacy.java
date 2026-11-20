@@ -18,7 +18,7 @@ import top.npcpathfindinglegacy.pathfinding.AsyncPathService;
 public final class NpcPathfindingLegacy {
     public static final String MOD_ID = "npcpathfindinglegacy";
     public static final String NAME = "NPC Pathfinding Legacy";
-    public static final String VERSION = "2.0.0";
+    public static final String VERSION = "2.0.5";
     public static final Logger LOG = LogUtils.getLogger();
 
     public NpcPathfindingLegacy() {
@@ -31,6 +31,7 @@ public final class NpcPathfindingLegacy {
         MinecraftForge.EVENT_BUS.register(top.npcpathfindinglegacy.tactics.flow.FlowFieldService.class);
         MinecraftForge.EVENT_BUS.register(top.npcpathfindinglegacy.tactics.group.SquadService.class);
         MinecraftForge.EVENT_BUS.register(top.npcpathfindinglegacy.tactics.TacticalPositions.class);
+        MinecraftForge.EVENT_BUS.register(top.npcpathfindinglegacy.traffic.TrafficController.class);
     }
 
     private void commonSetup(FMLCommonSetupEvent event) {

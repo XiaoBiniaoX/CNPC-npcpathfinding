@@ -20,6 +20,7 @@ public abstract class MixinEntityPathfindingHooks {
 
     @Inject(method = "remove", at = @At("HEAD"))
     private void npcpathfindinglegacy$cancelRemovedNpc(Entity.RemovalReason reason, CallbackInfo ci) {
+        if ((Object)this instanceof EntityNPCInterface npc) top.npcpathfindinglegacy.traffic.TrafficController.removed(npc);
         if ((Object) this instanceof EntityNPCInterface npc && !npc.level().isClientSide) TacticsRuntime.removed(npc);
         if ((Object) this instanceof INpcPathfindingEntity pathing) pathing.npcpathfindinglegacy$clearEnhancedState();
     }

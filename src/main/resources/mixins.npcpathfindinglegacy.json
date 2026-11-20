@@ -11,6 +11,7 @@
     "MixinNpcWandDefaultPathfinding",
     "MixinScriptContainer",
     "MixinEntityNPCInterface",
+    "MixinMobTraffic",
     "MixinEntityPathfindingHooks",
     "MixinLeapAtTargetGoal",
     "MixinLivingEntityJump",

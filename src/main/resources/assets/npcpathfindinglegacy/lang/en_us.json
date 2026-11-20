@@ -96,5 +96,7 @@
   "npcpathfindinglegacy.tactics.conditional_retreat.hint": "Fights normally, then withdraws when health or damage demands it.",
   "npcpathfindinglegacy.gui.scroll_hint": "Scroll for full details",
   "npcpathfindinglegacy.tactics.default": "Assault (default)",
-  "npcpathfindinglegacy.tactics.current": "Active: %s"
+  "npcpathfindinglegacy.tactics.current": "Active: %s",
+  "npcpathfindinglegacy.gui.comfortDistance": "Extra gap (blocks)",
+  "npcpathfindinglegacy.gui.traffic_hint": "Extra space beyond the collision boxes: 0-8 blocks, default 1.4. Larger bodies require more room. Navigation and tactics share this setting. Nearby units steer and slow down; narrow passages use a queue."
 }
