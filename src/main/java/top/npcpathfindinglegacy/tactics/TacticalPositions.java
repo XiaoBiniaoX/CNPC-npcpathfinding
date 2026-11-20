@@ -10,6 +10,7 @@ import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.Vec3d;
 import net.minecraftforge.fml.common.event.FMLServerStoppingEvent;
 import noppes.npcs.entity.EntityNPCInterface;
+import top.npcpathfindinglegacy.traffic.TrafficController;
 
 /** Cheap candidate filtering before cover rays; short reservations keep units from stacking. */
 public final class TacticalPositions {
@@ -24,15 +25,13 @@ public BlockPos position() { return position; }
 @Override public boolean equals(Object value) { if (this==value) return true; if (!(value instanceof Key)) return false; Key other=(Key)value; return java.util.Objects.equals(dimension,other.dimension) && java.util.Objects.equals(position,other.position); }
 }
     private static final class Reservation {
-private final UUID owner;
-private final long expires;
-public Reservation(UUID owner, long expires) {
-this.owner=owner;this.expires=expires;}
-public UUID owner() { return owner; }
-public long expires() { return expires; }
-@Override public int hashCode() { return java.util.Objects.hash(owner,expires); }
-@Override public boolean equals(Object value) { if (this==value) return true; if (!(value instanceof Reservation)) return false; Reservation other=(Reservation)value; return java.util.Objects.equals(owner,other.owner) && java.util.Objects.equals(expires,other.expires); }
-}
+        final UUID owner;
+        final long expires;
+        final double radius, comfort;
+        Reservation(UUID owner,long expires,double radius,double comfort) {
+            this.owner = owner; this.expires = expires; this.radius = radius; this.comfort = comfort;
+        }
+    }
     private static final Map<Key, Reservation> RESERVED = new LinkedHashMap<>();
     private static long rayTick = Long.MIN_VALUE;
     private static int rays;
@@ -40,8 +39,8 @@ public long expires() { return expires; }
 
     public static BlockPos resolve(EntityNPCInterface npc, Vec3d desired, boolean cover) {
         if (cover) return findCover(npc, TacticsRuntime.state(npc), 12);
-        WorldServer level = (WorldServer) npc.world; long time = ((WorldServer)(npc.world)).getTotalWorldTime();
-        RESERVED.entrySet().removeIf(e -> e.getValue().expires() <= time);
+        long time = npc.world.getTotalWorldTime();
+        RESERVED.values().removeIf(r -> r.expires <= time);
         BlockPos best = null; double score = Double.POSITIVE_INFINITY;
         for (int radius = 0; radius <= 3; radius++) {
             for (int dx = -radius; dx <= radius; dx++) for (int dz = -radius; dz <= radius; dz++) {
@@ -50,9 +49,7 @@ public long expires() { return expires; }
                 for (int dy : new int[]{0,1,-1,2,-2,3,-3}) {
                     BlockPos pos = column.add(0, dy, 0);
                     if (!standable(npc, pos)) continue;
-                    Key key = new Key(Integer.toString(npc.world.provider.getDimension()), pos);
-                    Reservation reservation = RESERVED.get(key);
-                    if (reservation != null && !reservation.owner().equals(npc.getUniqueID())) continue;
+                    if (!available(npc,pos)) continue;
                     double cost = pos.distanceSq(new BlockPos(desired)) + npc.getPosition().distanceSq(pos) * 0.1;
                     if (cost >= score) continue;
                     if (cost < score) { score = cost; best = pos; }
@@ -87,8 +84,18 @@ public long expires() { return expires; }
         return true;
     }
     private static boolean available(EntityNPCInterface npc, BlockPos pos) {
-        Reservation other = RESERVED.get(new Key(Integer.toString(npc.world.provider.getDimension()),pos));
-        return other == null || other.expires() <= npc.world.getTotalWorldTime() || other.owner().equals(npc.getUniqueID());
+        String dimension = Integer.toString(npc.world.provider.getDimension());
+        long now = npc.world.getTotalWorldTime();
+        double radius = TrafficController.bodyRadius(npc), comfort = TrafficController.comfort(npc);
+        for (Map.Entry<Key,Reservation> entry : RESERVED.entrySet()) {
+            Key key = entry.getKey(); Reservation other = entry.getValue();
+            if (!key.dimension().equals(dimension) || other.expires <= now || other.owner.equals(npc.getUniqueID())
+                || Math.abs(key.position().getY() - pos.getY()) > 1) continue;
+            double gap = radius + other.radius + (comfort + other.comfort) / 2;
+            double dx = key.position().getX() - pos.getX(), dz = key.position().getZ() - pos.getZ();
+            if (dx * dx + dz * dz < gap * gap) return false;
+        }
+        return true;
     }
     public static BlockPos findCover(EntityNPCInterface npc, TacticsState state, int radius) {
         if (state == null || npc.getAttackTarget() == null) return null;
@@ -150,7 +157,8 @@ public long expires() { return expires; }
 
     public static void reserve(EntityNPCInterface npc, BlockPos destination) {
         if (RESERVED.size() >= 256) RESERVED.remove(RESERVED.keySet().iterator().next());
-        RESERVED.put(new Key(Integer.toString(npc.world.provider.getDimension()), destination), new Reservation(npc.getUniqueID(), npc.world.getTotalWorldTime() + 35));
+        RESERVED.put(new Key(Integer.toString(npc.world.provider.getDimension()), destination), new Reservation(npc.getUniqueID(),
+            npc.world.getTotalWorldTime() + 35,TrafficController.bodyRadius(npc),TrafficController.comfort(npc)));
     }
 
     public static boolean standable(EntityNPCInterface npc,BlockPos pos) {
@@ -164,6 +172,6 @@ public long expires() { return expires; }
             && top.npcpathfindinglegacy.compat.LegacyCollision.blockBoxes(npc.world,body,npc).isEmpty()
             && !npc.world.getBlockState(pos).getMaterial().isLiquid();
     }
-    public static void release(UUID owner) { RESERVED.entrySet().removeIf(e -> e.getValue().owner().equals(owner)); }
+    public static void release(UUID owner) { RESERVED.values().removeIf(r -> r.owner.equals(owner)); }
     public static void stopped(FMLServerStoppingEvent event) { RESERVED.clear(); }
 }

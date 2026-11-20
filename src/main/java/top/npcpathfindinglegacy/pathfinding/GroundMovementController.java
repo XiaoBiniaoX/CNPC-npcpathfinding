@@ -16,6 +16,7 @@ final class GroundMovementController {
     }
 
     void reset() { ladderMotion = null; }
+    boolean directMotion() { return ladderMotion != null; }
 
     void follow() {
         reset();

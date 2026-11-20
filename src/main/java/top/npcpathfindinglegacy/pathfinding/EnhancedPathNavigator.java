@@ -22,6 +22,7 @@ import top.npcpathfindinglegacy.NpcPathfindingLegacy;
 import top.npcpathfindinglegacy.pathfinding.PlannedRoute.Action;
 import top.npcpathfindinglegacy.pathfinding.PlannedRoute.Edge;
 import top.npcpathfindinglegacy.tactics.TacticsRuntime;
+import top.npcpathfindinglegacy.traffic.TrafficController;
 
 /** Server-thread coordinator: requests, snapshots, result validation and route following. */
 public final class EnhancedPathNavigator extends PathNavigateGround {
@@ -38,7 +39,7 @@ public final class EnhancedPathNavigator extends PathNavigateGround {
     private final Map<Edge, Long> failedEdges = new HashMap<>();
     private boolean wallMode;
     private int mode = 1;
-    private boolean waitingForLanding;
+    private boolean waitingForLanding, trafficFallback, trafficDirectMotion;
     private BlockPos requestedTarget;
     private Entity chaseEntity;
     private PlannedRoute activeRoute;
@@ -82,6 +83,7 @@ public final class EnhancedPathNavigator extends PathNavigateGround {
     public boolean legacyMode() { return mode == 1; }
     public boolean combatMode() { return mode == 4; }
     public boolean controlledMode() { return legacyMode() || combatMode(); }
+    public boolean trafficDirectMotion() { return trafficDirectMotion; }
     public boolean controlsJump() { return waitingForLanding || wallMode || (controlledMode() && legacyMovement.busy()); }
     public boolean maySprint() {
         boolean allowed = !wallMode && ((mode != 3 && mode < 5) || ((IDataAIPathfinding) npc.ais).npcpathfindinglegacy$getAllowSprint());
@@ -102,7 +104,7 @@ public final class EnhancedPathNavigator extends PathNavigateGround {
         if (!serverThread() || target == null || !terrain.loaded(target)) return null;
         BlockPos goal = terrain.resolveTarget(target, wallMode);
         if (TacticsRuntime.redirects(npc)) return new DeferredPath(goal, currentFeetPos());
-        if (mode == 7 && activeRoute != null && path != null && !path.isFinished() && sameGoal(activeFinalTarget, goal))
+        if (mode == 7 && !trafficFallback && activeRoute != null && path != null && !path.isFinished() && sameGoal(activeFinalTarget, goal))
             return new DeferredPath(goal, currentFeetPos());
         BlockPos planningGoal = parkourRecovery.returning() ? planningTarget() : goal;
         if (!parkourRecovery.returning() && readyRoute != null
@@ -191,7 +193,7 @@ public final class EnhancedPathNavigator extends PathNavigateGround {
 
     private RoutePlanner.Settings settings() {
         IDataAIPathfinding data = (IDataAIPathfinding) npc.ais;
-        return new RoutePlanner.Settings(mode, ((IDataAIPathfinding)(npc.ais)).npcpathfindinglegacy$getWalkTendency(),
+        return new RoutePlanner.Settings(trafficFallback && mode >= 5 ? 3 : mode, data.npcpathfindinglegacy$getWalkTendency(),
             ((IDataAIPathfinding)(npc.ais)).npcpathfindinglegacy$getJumpTendency(), ((IDataAIPathfinding)(npc.ais)).npcpathfindinglegacy$getParkourMaxDist(),
             NpcPathfindingConfig.maxDropHeight, NpcPathfindingConfig.maxSearchNodes);
     }
@@ -205,7 +207,7 @@ public final class EnhancedPathNavigator extends PathNavigateGround {
     }
 
     private void prefetchSegment() {
-        if (mode != 7 || activeRoute == null || requestedTarget == null || readyRoute != null
+        if (mode != 7 || trafficFallback || activeRoute == null || requestedTarget == null || readyRoute != null
             || !sameGoal(activeFinalTarget, requestedTarget)) return;
         GridPos end = activeRoute.steps().get(activeRoute.steps().size() - 1).position();
         if (!end.equals(grid(requestedTarget))) prepareFrom(block(end), requestedTarget, 0, true);
@@ -226,7 +228,7 @@ public final class EnhancedPathNavigator extends PathNavigateGround {
         readyRoute = null;
         if (!PathComputationBudget.tryAcquire(level) || !AsyncPathService.beginSnapshot()) { retryTicks = 2; return; }
         try {
-            pendingTarget = mode == 7 ? terrain.resolveTarget(block(SegmentedPlanning.nextGoal(
+            pendingTarget = mode == 7 && !trafficFallback ? terrain.resolveTarget(block(SegmentedPlanning.nextGoal(
                 grid(start), grid(target))), false) : target.toImmutable();
             pendingFinalTarget = target.toImmutable(); pendingPrefetch = prefetch;
             pendingStart = grid(start);
@@ -306,7 +308,7 @@ public final class EnhancedPathNavigator extends PathNavigateGround {
     }
 
     private void install(PlannedRoute route) {
-        path = toPath(route); activeRoute = route; failedSearches = 0; stuckTicks = 0;
+        path = toPath(route); activeRoute = route; failedSearches = 0; stuckTicks = 0; trafficFallback = false;
         activeTactics = readyTactics;
         activeFinalTarget = readyFinalTarget;
         lastProgressPosition = npc.getPositionVector();
@@ -326,6 +328,7 @@ public final class EnhancedPathNavigator extends PathNavigateGround {
 
     @Override public void onUpdateNavigation() {
         if (!serverThread()) return;
+        trafficDirectMotion = false;
         if (!npc.isEntityAlive() || npc.isDead) { clearPath(); return; }
         tick++;
         if (retryTicks > 0) retryTicks--;
@@ -337,13 +340,13 @@ public final class EnhancedPathNavigator extends PathNavigateGround {
         }
         if (combatMode() && holdFiringPosition()) return;
         if (hasArrived()) { finishNavigation(); return; }
-        if (controlledMode() && legacyMovement.tick()) return;
+        if (controlledMode() && legacyMovement.tick()) { trafficDirectMotion = true; return; }
         if (waitingForLanding) {
             if (!npc.onGround) { haltMovement(); return; }
             waitingForLanding = false;
         }
         if (parkourRecovery.returning() && arrivedAt(planningTarget(), 0.1)) finishReturn();
-        if (recoveryTicks > 0) { applyRecovery(); return; }
+        if (recoveryTicks > 0) { applyRecovery(); trafficDirectMotion = true; return; }
         if (readyRoute != null) {
             boolean targetMatches = mode == 7 ? sameGoal(readyFinalTarget, planningTarget())
                 : readyRoute.target().distanceSquared(grid(planningTarget())) <= 4;
@@ -356,6 +359,7 @@ public final class EnhancedPathNavigator extends PathNavigateGround {
             if (failedSearches >= 8 && retryTicks == 0) { finishNavigation(); return; }
             activeRoute = null; prepare(planningTarget(), 0); haltMovement(); return;
         }
+        if (TrafficController.holdNavigation(npc)) { haltMovement(); return; }
         if (!nextStepValid()) { recoverJump(null, null); return; }
         prefetchSegment();
         followRoute();
@@ -369,6 +373,9 @@ public final class EnhancedPathNavigator extends PathNavigateGround {
             npc.getMoveHelper().setMoveTo(next.x, next.y, next.z, speedModifier);
             legacyMovement.applyEnhancedMovement();
         }
+        trafficDirectMotion = legacyMovement.busy() || wallMovement.directMotion() || groundMovement.directMotion()
+            || (controlledMode() && npc.getMoveHelper().getSpeed() == 0 && npc.isOnLadder())
+            || (controlledMode() && npc.motionY > 0.25);
         trackProgress();
     }
 
@@ -418,6 +425,12 @@ public final class EnhancedPathNavigator extends PathNavigateGround {
         retryTicks = 0; prepare(planningTarget(), 0);
     }
 
+    public void trafficReplan() {
+        if (!serverThread() || requestedTarget == null) return;
+        trafficFallback = true;
+        updatePath();
+    }
+
     public boolean noPath() { return requestedTarget == null && (path == null || path.isFinished()); }
 
     private boolean hasArrived() {
@@ -436,11 +449,11 @@ public final class EnhancedPathNavigator extends PathNavigateGround {
     private void finishNavigation() { clearPath(); }
 
     @Override public void clearPath() {
-        super.clearPath(); requestedTarget = null; chaseEntity = null; activeRoute = null; readyRoute = null;
+        super.clearPath(); path = null; requestedTarget = null; chaseEntity = null; activeRoute = null; readyRoute = null;
         pendingFinalTarget = null; readyFinalTarget = null; activeFinalTarget = null;
         activeTactics = null; readyTactics = null;
         cancelWork(); retryTicks = 0; failedSearches = 0; stuckTicks = 0; recoveryTicks = 0; failedEdges.clear();
-        waitingForLanding = false;
+        waitingForLanding = false; trafficFallback = false; trafficDirectMotion = false;
         parkourRecovery.reset();
         if (legacyMovement != null) legacyMovement.reset();
         if (wallMovement != null) wallMovement.reset();
@@ -481,6 +494,7 @@ public final class EnhancedPathNavigator extends PathNavigateGround {
 
     private void trackProgress() {
         if (controlledMode() && legacyMovement.busy()) return;
+        if (!trafficDirectMotion && npc.onGround && TrafficController.tracksProgress(npc)) return;
         if (path != null && !path.isFinished() && terrain.interactableDoor(nextBlock(path))) return;
         if (npc.getPositionVector().squareDistanceTo(lastProgressPosition) >= 0.0036) {
             lastProgressPosition = npc.getPositionVector(); stuckTicks = 0; return;
@@ -496,7 +510,7 @@ public final class EnhancedPathNavigator extends PathNavigateGround {
     }
 
     public void applyPostAiMovementLock() {
-        if (!serverThread()) return;
+        if (!serverThread() || TrafficController.overridesMovement(npc)) return;
         if (wallMode) wallMovement.applyPostAiMovement();
         else if (mode == 3 || mode >= 5 || (combatMode() && !legacyMovement.busy())) groundMovement.applyPostAiMovement();
         else if (recoveryTicks > 0) {

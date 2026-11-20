@@ -96,3 +96,4 @@ npcpathfindinglegacy.tactics.conditional_retreat.hint=Fights normally, then with
 npcpathfindinglegacy.gui.scroll_hint=Scroll for full details
 npcpathfindinglegacy.tactics.default=Assault (default)
 npcpathfindinglegacy.tactics.current=Active: %s
+npcpathfindinglegacy.gui.comfortDistance=Extra gap

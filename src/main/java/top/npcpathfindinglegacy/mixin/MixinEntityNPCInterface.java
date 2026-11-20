@@ -15,6 +15,7 @@ import top.npcpathfindinglegacy.NpcPathfindingConfig;
 import top.npcpathfindinglegacy.pathfinding.EnhancedPathNavigator;
 import top.npcpathfindinglegacy.pathfinding.IDataAIPathfinding;
 import top.npcpathfindinglegacy.pathfinding.INpcPathfindingEntity;
+import top.npcpathfindinglegacy.traffic.TrafficController;
 
 @Mixin(value = EntityNPCInterface.class, remap = false)
 public abstract class MixinEntityNPCInterface extends EntityCreature implements INpcPathfindingEntity {
@@ -78,6 +79,7 @@ public abstract class MixinEntityNPCInterface extends EntityCreature implements 
             && this.npcpathfindinglegacy$enhancedNavigation != null) {
             this.npcpathfindinglegacy$enhancedNavigation.applyPostAiMovementLock();
         }
+        TrafficController.afterAi((EntityNPCInterface)(Object)this);
     }
 
     @Override

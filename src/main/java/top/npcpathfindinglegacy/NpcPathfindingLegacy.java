@@ -10,19 +10,20 @@ import org.apache.logging.log4j.Logger;
     modid = NpcPathfindingLegacy.MOD_ID,
     name = NpcPathfindingLegacy.NAME,
     version = NpcPathfindingLegacy.VERSION,
-    acceptableRemoteVersions = "[2.0.0,)",
+    acceptableRemoteVersions = "[2.0.5,)",
     dependencies = "required-after:customnpcs;required-after:cnpcplus@[4.0.5,);required-after:mixinbooter"
 )
 public final class NpcPathfindingLegacy {
     public static final String MOD_ID = "npcpathfindinglegacy";
     public static final String NAME = "NPC Pathfinding Legacy";
-    public static final String VERSION = "2.0.0";
+    public static final String VERSION = "2.0.5";
     public static final Logger LOG = LogManager.getLogger(NAME);
 
     @Mod.EventHandler
     public void preInit(FMLPreInitializationEvent event) {
-        // Only ServerTickEvent uses the Forge bus; stopping is forwarded by the FML handler below.
+        // Tick and world events use the Forge bus; stopping is forwarded by FML below.
         net.minecraftforge.common.MinecraftForge.EVENT_BUS.register(top.npcpathfindinglegacy.tactics.flow.FlowFieldService.class);
+        net.minecraftforge.common.MinecraftForge.EVENT_BUS.register(top.npcpathfindinglegacy.traffic.TrafficController.class);
         NpcPathfindingConfig.load(event.getSuggestedConfigurationFile());
         LOG.info(
             "[NPC Pathfinding Legacy] Loaded {}. CustomNPCs SRParasites compatibility layer detected: {}",
@@ -50,6 +51,7 @@ public final class NpcPathfindingLegacy {
         top.npcpathfindinglegacy.tactics.flow.FlowFieldService.stopped(event);
         top.npcpathfindinglegacy.tactics.group.SquadService.stopped(event);
         top.npcpathfindinglegacy.tactics.TacticalPositions.stopped(event);
+        top.npcpathfindinglegacy.traffic.TrafficController.stopped();
     }
 
     private static boolean classExists(String name) {

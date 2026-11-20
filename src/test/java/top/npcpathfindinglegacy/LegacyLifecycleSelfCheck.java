@@ -14,12 +14,13 @@ import top.npcpathfindinglegacy.pathfinding.AsyncPathService;
 import top.npcpathfindinglegacy.tactics.TacticalPositions;
 import top.npcpathfindinglegacy.tactics.flow.FlowFieldService;
 import top.npcpathfindinglegacy.tactics.group.SquadService;
+import top.npcpathfindinglegacy.traffic.TrafficController;
 
 /** Use the real Forge event hierarchy without launching Minecraft. */
 public final class LegacyLifecycleSelfCheck {
     public static void main(String[] args) throws Exception {
         Class<?>[] services = {AsyncPathService.class, FlowFieldService.class,
-            SquadService.class, TacticalPositions.class};
+            SquadService.class, TacticalPositions.class, TrafficController.class};
         for (Class<?> service : services) {
             for (Method method : service.getDeclaredMethods()) {
                 if (method.isAnnotationPresent(SubscribeEvent.class)) {
@@ -39,6 +40,8 @@ public final class LegacyLifecycleSelfCheck {
         field(FlowFieldService.class, "executor").set(null, flow);
         cache(SquadService.class, "SQUADS").put(new Object(), new Object());
         cache(TacticalPositions.class, "RESERVED").put(new Object(), new Object());
+        Object world = new Object();
+        cache(TrafficController.class, "WORLDS").put(world, new Object());
         try {
             new NpcPathfindingLegacy().serverStopping(null);
             require(paths.isShutdown() && flow.isShutdown(), "Worker pools must shut down");
@@ -47,7 +50,8 @@ public final class LegacyLifecycleSelfCheck {
             require(field(AsyncPathService.class, "snapshots").getInt(null) == 0, "Snapshot budget must reset");
             require(cache(FlowFieldService.class, "FIELDS").isEmpty()
                 && cache(SquadService.class, "SQUADS").isEmpty()
-                && cache(TacticalPositions.class, "RESERVED").isEmpty(), "World caches must clear");
+                && cache(TacticalPositions.class, "RESERVED").isEmpty()
+                && !cache(TrafficController.class, "WORLDS").containsKey(world), "World caches must clear");
         } finally {
             paths.shutdownNow(); flow.shutdownNow();
         }

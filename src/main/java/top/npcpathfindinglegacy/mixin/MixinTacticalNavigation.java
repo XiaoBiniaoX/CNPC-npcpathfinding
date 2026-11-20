@@ -14,6 +14,16 @@ import net.minecraft.pathfinding.PathNavigate;
 @Mixin(value=PathNavigate.class,remap=false)
 public abstract class MixinTacticalNavigation {
     @Shadow(remap=false) protected EntityLiving field_75515_a;
+    @Inject(method="func_75501_e()V",at=@At("HEAD"),cancellable=true,remap=false)
+    private void npcpathfindinglegacy$trafficGate(CallbackInfo ci) {
+        if (LegacyVanillaHooks.holdNavigation(field_75515_a)) ci.cancel();
+    }
+    @Inject(method="func_179677_a(Lnet/minecraft/util/math/Vec3d;)V",at=@At("HEAD"),cancellable=true,remap=false)
+    private void npcpathfindinglegacy$trafficProgress(CallbackInfo ci) {
+        if (LegacyVanillaHooks.trafficTracksProgress(field_75515_a)) ci.cancel();
+    }
+    @Inject(method="func_75499_g()V",at=@At("HEAD"),remap=false)
+    private void npcpathfindinglegacy$trafficCancel(CallbackInfo ci) { LegacyVanillaHooks.trafficCancel(field_75515_a,this); }
     @Inject(method="func_75492_a(DDDD)Z",at=@At("HEAD"),cancellable=true,remap=false)
     private void npcpathfindinglegacy$coordinateMove(double x,double y,double z,double speed,CallbackInfoReturnable<Boolean> cir) {
         if (LegacyVanillaHooks.redirects(field_75515_a)) cir.setReturnValue(true);

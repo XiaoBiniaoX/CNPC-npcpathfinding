@@ -6,6 +6,7 @@ import net.minecraft.client.resources.I18n;
 import noppes.npcs.client.gui.util.*;
 import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.GL11;
+import top.npcpathfindinglegacy.pathfinding.IDataAIPathfinding;
 
 /** Same fixed list/detail/footer regions using legacy CNPC's native widgets. */
 abstract class SettingsPanel extends SubGuiInterface {
@@ -29,6 +30,16 @@ abstract class SettingsPanel extends SubGuiInterface {
         getTextField(id).numbersOnly=true;getTextField(id).setMinMaxDefault(minimum,maximum,value);
     }
     void text(String key,int x,int y,int color) { fontRenderer.drawString(I18n.format(key),x,y,color); }
+    void comfortDistance(int id,IDataAIPathfinding data) {
+        addTextField(new GuiNpcTextField(id,this,guiLeft + xSize - 66,guiTop + ySize - 58,48,18,
+            Double.toString(data.npcpathfindinglegacy$getComfortDistance())));
+        getTextField(id).setMaxStringLength(8);
+    }
+    void saveComfortDistance(GuiNpcTextField field,IDataAIPathfinding data) {
+        try { data.npcpathfindinglegacy$setComfortDistance(Double.parseDouble(field.getText())); }
+        catch (NumberFormatException invalid) { /* Keep the previous setting. */ }
+        field.setText(Double.toString(data.npcpathfindinglegacy$getComfortDistance()));
+    }
     int wrapped(String key,int x,int y,int w,int color) {
         for (String line:fontRenderer.listFormattedStringToWidth(I18n.format(key),w)) { fontRenderer.drawString(line,x,y,color);y+=11; }return y;
     }

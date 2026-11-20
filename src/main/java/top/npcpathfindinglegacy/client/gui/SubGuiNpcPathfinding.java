@@ -41,6 +41,7 @@ public final class SubGuiNpcPathfinding extends SettingsPanel implements ITextfi
         } else if (mode == 4) number(3,guiLeft + xSize - 66,y,settings.npcpathfindinglegacy$getParkourMaxDist(),0,5);
         else if (mode == 3 || mode >= 5) button(5,guiLeft + xSize - 76,y,58,
             settings.npcpathfindinglegacy$getAllowSprint() ? "gui.yes" : "gui.no",false);
+        comfortDistance(6,settings);
         addButton(new GuiNpcButton(67,guiLeft + 12,guiTop + ySize - 25,split() - 20,20,"npcpathfindinglegacy.gui.set_default") {
             @Override public void drawButton(net.minecraft.client.Minecraft minecraft, int mouseX, int mouseY, float partialTicks) {
                 if (enabled) { super.drawButton(minecraft,mouseX,mouseY,partialTicks); return; }
@@ -64,7 +65,7 @@ public final class SubGuiNpcPathfinding extends SettingsPanel implements ITextfi
         if (synced < 0 || synced > 7) return;
         defaultMode = synced; defaultKnown = true; savingDefault = false; updateDefaultButton();
     }
-    private int controlsTop() { return guiTop + ySize - 38 - (mode == 1 ? 92 : mode == 4 || mode == 3 || mode >= 5 ? 23 : 0); }
+    private int controlsTop() { return guiTop + ySize - 61 - (mode == 1 ? 92 : mode == 4 || mode == 3 || mode >= 5 ? 23 : 0); }
     @Override public void drawScreen(int mouseX, int mouseY, float partialTicks) {
         panel("npcpathfindinglegacy.gui.title");
         int x = right(), y = guiTop + 40;
@@ -79,10 +80,11 @@ public final class SubGuiNpcPathfinding extends SettingsPanel implements ITextfi
             text("npcpathfindinglegacy.gui.chaseJumpInterval",x,y + 69,TEXT);
         } else if (mode == 4) text("npcpathfindinglegacy.gui.parkourMaxDist",x,y,TEXT);
         else if (mode == 3 || mode >= 5) text("npcpathfindinglegacy.gui.allowSprint",x,y,TEXT);
+        text("npcpathfindinglegacy.gui.comfortDistance",x,guiTop + ySize - 54,TEXT);
         super.drawScreen(mouseX,mouseY,partialTicks);
     }
     @Override protected void actionPerformed(GuiButton button) {
-        if (button.id == 5) { settings.npcpathfindinglegacy$setAllowSprint(!settings.npcpathfindinglegacy$getAllowSprint()); initGui(); }
+        if (button.id == 5) { GuiNpcTextField.unfocus(); settings.npcpathfindinglegacy$setAllowSprint(!settings.npcpathfindinglegacy$getAllowSprint()); initGui(); }
         else if (button.id == 67) {
             if (!defaultKnown || savingDefault || mode == defaultMode) return;
             GuiNpcTextField.unfocus();
@@ -106,6 +108,7 @@ public final class SubGuiNpcPathfinding extends SettingsPanel implements ITextfi
             case 2: settings.npcpathfindinglegacy$setJumpTendency(field.getInteger()); break;
             case 3: settings.npcpathfindinglegacy$setParkourMaxDist(field.getInteger()); break;
             case 4: settings.npcpathfindinglegacy$setChaseJumpInterval(field.getInteger()); break;
+            case 6: saveComfortDistance(field,settings); break;
         }
     }
 }

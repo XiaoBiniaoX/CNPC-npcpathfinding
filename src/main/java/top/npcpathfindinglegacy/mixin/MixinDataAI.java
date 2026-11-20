@@ -40,6 +40,7 @@ public abstract class MixinDataAI implements IDataAIPathfinding, ITacticsData {
     @Unique private int npcpathfindinglegacy$tactic;
     @Unique private int npcpathfindinglegacy$squad;
     @Unique private int npcpathfindinglegacy$tacticRadius = 12;
+    @Unique private double npcpathfindinglegacy$comfortDistance = 1.4;
 
     @Inject(method = "readToNBT", at = @At("TAIL"), remap = false)
     private void npcpathfindinglegacy$readSettings(NBTTagCompound compound, CallbackInfo ci) {
@@ -51,6 +52,8 @@ public abstract class MixinDataAI implements IDataAIPathfinding, ITacticsData {
         npcpathfindinglegacy$squad = clamp(compound.getInteger("NPC_TacticSquad"), 0, 9999);
         npcpathfindinglegacy$tacticRadius = compound.hasKey("NPC_TacticRadius")
             ? clamp(compound.getInteger("NPC_TacticRadius"), 3, 24) : 12;
+        npcpathfindinglegacy$setComfortDistance(compound.hasKey("NPC_ComfortDistance",99)
+            ? compound.getDouble("NPC_ComfortDistance") : 1.4);
         if (compound.hasKey("NPC_PathfindingMode")) {
             this.npcpathfindinglegacy$mode = clamp(compound.getInteger("NPC_PathfindingMode"), 0, 7);
         }
@@ -91,6 +94,12 @@ public abstract class MixinDataAI implements IDataAIPathfinding, ITacticsData {
         result.setInteger("NPC_TacticVariant", npcpathfindinglegacy$tactic);
         result.setInteger("NPC_TacticSquad", npcpathfindinglegacy$squad);
         result.setInteger("NPC_TacticRadius", npcpathfindinglegacy$tacticRadius);
+        result.setDouble("NPC_ComfortDistance",npcpathfindinglegacy$comfortDistance);
+    }
+
+    public double npcpathfindinglegacy$getComfortDistance() { return npcpathfindinglegacy$comfortDistance; }
+    public void npcpathfindinglegacy$setComfortDistance(double distance) {
+        npcpathfindinglegacy$comfortDistance = Double.isFinite(distance) ? Math.max(0,Math.min(8,distance)) : 1.4;
     }
 
     public int npcpathfindinglegacy$getTactic() { return npcpathfindinglegacy$tactic; }

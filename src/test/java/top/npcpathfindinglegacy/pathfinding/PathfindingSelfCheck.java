@@ -17,6 +17,7 @@ public final class PathfindingSelfCheck {
     public static void main(String[] args) {
         DefaultPathfindingSelfCheck.run();
         MajorUpdateSelfCheck.run();
+        top.npcpathfindinglegacy.traffic.TrafficSelfCheck.run();
         for (int tendency = 0; tendency <= 100; tendency++) {
             for (int rise = 0; rise <= 1; rise++) {
                 double velocity = JumpTrajectoryPlanner.parkourVelocity(tendency, rise);

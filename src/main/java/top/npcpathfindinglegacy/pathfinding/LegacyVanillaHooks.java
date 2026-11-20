@@ -5,6 +5,7 @@ import net.minecraft.util.math.Vec3d;
 import noppes.npcs.entity.EntityNPCInterface;
 import top.npcpathfindinglegacy.compat.LegacyMath;
 import top.npcpathfindinglegacy.tactics.TacticsRuntime;
+import top.npcpathfindinglegacy.traffic.TrafficController;
 
 /** Early vanilla mixins use only this Object boundary, before CNPC is on the mod classpath. */
 public final class LegacyVanillaHooks {
@@ -32,6 +33,11 @@ public final class LegacyVanillaHooks {
     public static boolean remembers(Object entity, Object target) {
         return entity instanceof INpcPathfindingEntity && NpcHooks.remembers(entity,target);
     }
+    public static boolean holdNavigation(Object entity) { return entity instanceof INpcPathfindingEntity && NpcHooks.holdNavigation(entity); }
+    public static boolean trafficTracksProgress(Object entity) { return entity instanceof INpcPathfindingEntity && NpcHooks.trafficTracksProgress(entity); }
+    public static void trafficCancel(Object entity,Object navigation) { if (entity instanceof INpcPathfindingEntity) NpcHooks.trafficCancel(entity,navigation); }
+    public static void trafficTick(Object entity) { if (entity instanceof INpcPathfindingEntity) NpcHooks.trafficTick(entity); }
+    public static void trafficAfterControls(Object entity) { if (entity instanceof INpcPathfindingEntity) NpcHooks.trafficAfterControls(entity); }
 
     // Resolve CNPC classes only after an NPC with our late mixin reaches a vanilla hook.
     private static final class NpcHooks {
@@ -64,8 +70,17 @@ public final class LegacyVanillaHooks {
             }
         }
         static void removed(Object entity) {
-            EntityNPCInterface npc = npc(entity); if (server(npc)) TacticsRuntime.removed(npc);
+            EntityNPCInterface npc = npc(entity);
+            if (server(npc)) { TrafficController.removed(npc); TacticsRuntime.removed(npc); }
         }
+        static boolean holdNavigation(Object entity) { return TrafficController.holdNavigation((EntityNPCInterface)entity); }
+        static boolean trafficTracksProgress(Object entity) { return TrafficController.tracksProgress((EntityNPCInterface)entity); }
+        static void trafficCancel(Object entity,Object navigation) {
+            EntityNPCInterface npc = (EntityNPCInterface)entity;
+            if (npc.getNavigator() == navigation) TrafficController.cancel(npc);
+        }
+        static void trafficTick(Object entity) { TrafficController.tick((EntityNPCInterface)entity); }
+        static void trafficAfterControls(Object entity) { TrafficController.afterControls((EntityNPCInterface)entity); }
         static boolean redirects(Object entity) {
             EntityNPCInterface npc = npc(entity); return npc != null && TacticsRuntime.redirects(npc);
         }

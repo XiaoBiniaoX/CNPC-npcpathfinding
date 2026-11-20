@@ -59,6 +59,7 @@ public int height() { return height; }
     }
     public static BlockPos waypoint(EntityNPCInterface npc, BlockPos destination, int squad, BlockPos fieldAnchor) {
         if (!(npc.world instanceof WorldServer) || !((WorldServer)(npc.world)).getMinecraftServer().isCallingFromMinecraftThread()) return destination;
+        if (top.npcpathfindinglegacy.traffic.TrafficController.avoidsFlow(npc)) return destination;
         long time = ((WorldServer)(npc.world)).getMinecraftServer().getTickCounter();
         if (budgetTick != time) { budgetTick = time; sampled = 0; }
         FIELDS.entrySet().removeIf(e -> {

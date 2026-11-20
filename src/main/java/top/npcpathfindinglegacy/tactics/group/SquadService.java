@@ -137,7 +137,9 @@ public int flankSide() { return flankSide; }
             long shapeChanged = time;
             if (cached != null && cached.leader().equals(elected.getUniqueID()) && shape != Formation.Shape.COLUMN && time - cached.shapeChanged() < 60) shape = cached.shape();
             if (cached != null && cached.shape() == shape) shapeChanged = cached.shapeChanged();
-            double spacing = Math.max(2,members.stream().mapToDouble(npcValue -> npcValue.width).max().orElse(0.6) + 0.8);
+            double spacing = Math.max(2,members.stream().mapToDouble(member ->
+                2 * top.npcpathfindinglegacy.traffic.TrafficController.bodyRadius(member)
+                    + top.npcpathfindinglegacy.traffic.TrafficController.comfort(member)).max().orElse(2));
             List<UUID> ids = members.stream().map(EntityNPCInterface::getUniqueID).collect(java.util.stream.Collectors.toList());
             if (formation) {
                 if (cached != null && cached.leader().equals(elected.getUniqueID()) && cached.shape() == shape

@@ -96,3 +96,4 @@ npcpathfindinglegacy.tactics.conditional_retreat.hint=正常交战，低血量�
 npcpathfindinglegacy.gui.scroll_hint=滚轮查看完整说明
 npcpathfindinglegacy.tactics.default=突击（默认）
 npcpathfindinglegacy.tactics.current=当前：%s
+npcpathfindinglegacy.gui.comfortDistance=舒适间距（格）
