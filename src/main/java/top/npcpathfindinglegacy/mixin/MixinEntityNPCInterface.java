@@ -79,6 +79,7 @@ public abstract class MixinEntityNPCInterface extends PathfinderMob implements I
             && this.npcpathfindinglegacy$enhancedNavigation != null) {
             this.npcpathfindinglegacy$enhancedNavigation.applyPostAiMovementLock();
         }
+        top.npcpathfindinglegacy.traffic.TrafficController.afterAi((EntityNPCInterface)(Object)this);
     }
 
     @Override

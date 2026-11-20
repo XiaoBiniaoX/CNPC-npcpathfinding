@@ -11,11 +11,21 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import top.npcpathfindinglegacy.tactics.TacticsRuntime;
+import top.npcpathfindinglegacy.traffic.TrafficController;
 
 @Mixin(PathNavigation.class)
 public abstract class MixinTacticalNavigation {
     @Shadow @Final protected Mob mob;
+    @Inject(method = "tick", at = @At("HEAD"), cancellable = true)
+    private void npcpathfindinglegacy$queueWithoutReplanning(CallbackInfo ci) {
+        if (mob instanceof EntityNPCInterface npc && TrafficController.holdNavigation(npc)) ci.cancel();
+    }
+    @Inject(method = "stop", at = @At("HEAD"))
+    private void npcpathfindinglegacy$releasePassage(CallbackInfo ci) {
+        if (mob instanceof EntityNPCInterface npc) TrafficController.cancel(npc);
+    }
     @Inject(method = "moveTo(DDDD)Z", at = @At("HEAD"), cancellable = true)
     private void npcpathfindinglegacy$coordinateMove(double x, double y, double z, double speed, CallbackInfoReturnable<Boolean> cir) {
         if (mob instanceof EntityNPCInterface npc && TacticsRuntime.redirects(npc)) cir.setReturnValue(true);

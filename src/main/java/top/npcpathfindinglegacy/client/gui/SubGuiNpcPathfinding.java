@@ -43,6 +43,7 @@ public final class SubGuiNpcPathfinding extends SettingsPanel implements ITextfi
         } else if (mode == 4) number(3,guiLeft + imageWidth - 66,y,settings.npcpathfindinglegacy$getParkourMaxDist(),0,5);
         else if (mode == 3 || mode >= 5) button(5,guiLeft + imageWidth - 76,y,58,
             settings.npcpathfindinglegacy$getAllowSprint() ? "gui.yes" : "gui.no",false);
+        comfortDistance(6,guiTop + imageHeight - 58,settings.npcpathfindinglegacy$getComfortDistance());
         addButton(new GuiButtonNop(this,67,guiLeft + 12,guiTop + imageHeight - 25,split() - 20,20,"npcpathfindinglegacy.gui.set_default") {
             @Override public void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
                 if (active) { super.renderWidget(graphics,mouseX,mouseY,partialTicks); return; }
@@ -66,13 +67,13 @@ public final class SubGuiNpcPathfinding extends SettingsPanel implements ITextfi
         if (synced < 0 || synced > 7) return;
         defaultMode = synced; defaultKnown = true; savingDefault = false; updateDefaultButton();
     }
-    private int controlsTop() { return guiTop + imageHeight - 38 - (mode == 1 ? 92 : mode == 4 || mode == 3 || mode >= 5 ? 23 : 0); }
+    private int controlsTop() { return guiTop + imageHeight - 61 - (mode == 1 ? 92 : mode == 4 || mode == 3 || mode >= 5 ? 23 : 0); }
     @Override public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
         panel(graphics,"npcpathfindinglegacy.gui.title");
         int x = right(), y = guiTop + 40;
         text(graphics,"npcpathfindinglegacy.gui.mode." + MODES[mode],x,y,SELECTED);
         description(graphics,y + 19,controlsTop() - 6,"npcpathfindinglegacy.gui.scene." + MODES[mode],
-            "npcpathfindinglegacy.gui.limit." + MODES[mode],"npcpathfindinglegacy.gui.default_hint");
+            "npcpathfindinglegacy.gui.limit." + MODES[mode],"npcpathfindinglegacy.gui.traffic_hint","npcpathfindinglegacy.gui.default_hint");
         y = controlsTop() + 5;
         if (mode == 1) {
             text(graphics,"npcpathfindinglegacy.gui.walkTendency",x,y,TEXT);
@@ -81,6 +82,7 @@ public final class SubGuiNpcPathfinding extends SettingsPanel implements ITextfi
             text(graphics,"npcpathfindinglegacy.gui.chaseJumpInterval",x,y + 69,TEXT);
         } else if (mode == 4) text(graphics,"npcpathfindinglegacy.gui.parkourMaxDist",x,y,TEXT);
         else if (mode == 3 || mode >= 5) text(graphics,"npcpathfindinglegacy.gui.allowSprint",x,y,TEXT);
+        text(graphics,"npcpathfindinglegacy.gui.comfortDistance",x,guiTop + imageHeight - 54,TEXT);
         super.render(graphics,mouseX,mouseY,partialTicks);
     }
     @Override public void buttonEvent(GuiButtonNop button) {
@@ -108,6 +110,7 @@ public final class SubGuiNpcPathfinding extends SettingsPanel implements ITextfi
             case 2 -> settings.npcpathfindinglegacy$setJumpTendency(field.getInteger());
             case 3 -> settings.npcpathfindinglegacy$setParkourMaxDist(field.getInteger());
             case 4 -> settings.npcpathfindinglegacy$setChaseJumpInterval(field.getInteger());
+            case 6 -> settings.npcpathfindinglegacy$setComfortDistance(field.getFloat());
         }
     }
 }

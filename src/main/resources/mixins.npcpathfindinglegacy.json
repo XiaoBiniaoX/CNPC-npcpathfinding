@@ -11,6 +11,7 @@
     "MixinScriptContainer",
     "MixinEntityNPCInterface",
     "MixinEntityPathfindingHooks",
+    "MixinMobTraffic",
     "MixinLeapAtTargetGoal",
     "MixinLivingEntityJump",
     "MixinAvoidTargetNavigation",

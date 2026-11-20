@@ -15,6 +15,7 @@ public final class PathfindingSelfCheck {
     private static final RoutePlanner.Settings COMBAT = new RoutePlanner.Settings(4, 50, 50, 4, 8, 5000);
 
     public static void main(String[] args) {
+        top.npcpathfindinglegacy.traffic.TrafficSelfCheck.run();
         DefaultPathfindingSelfCheck.run();
         MajorUpdateSelfCheck.run();
         for (int tendency = 0; tendency <= 100; tendency++) {

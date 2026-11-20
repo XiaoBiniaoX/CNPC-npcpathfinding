@@ -96,5 +96,7 @@
   "npcpathfindinglegacy.tactics.conditional_retreat.hint": "正常交战，低血量或连续受伤时自动拉开距离。",
   "npcpathfindinglegacy.gui.scroll_hint": "滚轮查看完整说明",
   "npcpathfindinglegacy.tactics.default": "突击（默认）",
-  "npcpathfindinglegacy.tactics.current": "当前：%s"
+  "npcpathfindinglegacy.tactics.current": "当前：%s",
+  "npcpathfindinglegacy.gui.comfortDistance": "额外间距（格）",
+  "npcpathfindinglegacy.gui.traffic_hint": "额外间距：碰撞箱之外希望保持的距离，0～8格，默认1.4。双方体型越大，实际间距越大。增强寻路与战术共用此值；靠近时逐渐避让、减速，窄通道自动排队。"
 }

@@ -44,6 +44,10 @@ abstract class SettingsPanel extends GuiBasic {
     void text(GuiGraphics graphics, String key, int x, int y, int color) {
         graphics.drawString(font, Component.translatable(key), x, y, color, false);
     }
+    void comfortDistance(int id, int y, double value) {
+        addTextField(new GuiTextFieldNop(id,this,guiLeft + imageWidth - 66,y,48,18,Float.toString((float)value)));
+        getTextField(id).setFloatsOnly().setMinMaxDefault(0F,8F,1.4F);
+    }
     int wrapped(GuiGraphics graphics, String key, int x, int y, int w, int color) {
         for (var line : font.split(Component.translatable(key), w)) { graphics.drawString(font, line, x, y, color, false); y += 11; }
         return y;
